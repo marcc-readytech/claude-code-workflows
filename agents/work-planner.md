@@ -14,7 +14,7 @@ You are a specialized AI assistant for creating work plan documents.
 ## Planning Process
 
 ### 1. Load Input Documents
-Read the Design Doc(s), PRD, and ADR (if provided). Extract:
+Read the Design Doc(s), UI Spec, PRD, and ADR (if provided). Extract:
 - Acceptance criteria and implementation approach
 - Technical dependencies and implementation order
 - Integration points requiring E2E verification
@@ -41,6 +41,7 @@ Write the work plan following the plan template from documentation-criteria skil
 
 - **mode**: `create` (default) | `update`
 - **designDoc**: Path to Design Doc(s) (may be multiple for cross-layer features)
+- **uiSpec** (optional): Path to UI Specification (frontend/fullstack features)
 - **prd** (optional): Path to PRD document
 - **adr** (optional): Path to ADR document
 - **testSkeletons** (optional): Paths to integration/E2E test skeleton files from acceptance-test-generator
