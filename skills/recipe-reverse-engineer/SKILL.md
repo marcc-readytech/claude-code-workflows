@@ -78,6 +78,7 @@ prompt: |
 - No units discovered → ask user for hints
 - `$STEP_1_OUTPUT.prdUnits` exists
 - All `sourceUnits` across `prdUnits` (flattened, deduplicated) match the set of `discoveredUnits` IDs — no unit missing, no unit duplicated
+- Each discovered unit's `unitInventory` has at least one non-empty category (routes, testFiles, or publicExports). Units with all three empty indicate incomplete discovery — re-run scope-discoverer with focus on that unit's relatedFiles
 
 **Human Review Point** (if enabled): Present `$STEP_1_OUTPUT.prdUnits` with their source unit mapping. The user confirms, adjusts grouping, or excludes units from scope. This is the most important review point — incorrect grouping cascades into all downstream documents.
 
@@ -102,8 +103,9 @@ prompt: |
   Related Files: $PRD_UNIT_COMBINED_RELATED_FILES
   Entry Points: $PRD_UNIT_COMBINED_ENTRY_POINTS
 
-  Skip independent scope discovery. Use provided scope data.
-  Create final version PRD based on code investigation within specified scope.
+  Use provided scope as investigation starting point.
+  If tracing entry points reveals files outside this scope, include them.
+  Create final version PRD based on thorough code investigation.
 ```
 
 **Store output as**: `$STEP_2_OUTPUT` (PRD path)
@@ -121,14 +123,16 @@ prompt: |
 
   doc_type: prd
   document_path: $STEP_2_OUTPUT
-  code_paths: $PRD_UNIT_COMBINED_RELATED_FILES (from $STEP_1_OUTPUT)
   verbose: false
 ```
+
+Note: `code_paths` is intentionally NOT provided. The verifier independently discovers code scope from the document, ensuring independent verification not constrained by scope-discoverer's output.
 
 **Store output as**: `$STEP_3_OUTPUT`
 
 **Quality Gate**:
-- consistencyScore >= 70 → proceed to review
+- consistencyScore >= 70 AND verifiableClaimCount >= 20 → proceed to review
+- consistencyScore >= 70 BUT verifiableClaimCount < 20 → re-run verifier (investigation too shallow)
 - consistencyScore < 70 → flag for detailed review
 
 #### Step 4: Review
@@ -214,6 +218,7 @@ Map `$STEP_1_OUTPUT` units to Design Doc generation targets, carrying forward:
 - `technicalProfile.publicInterfaces` → Public Interfaces
 - `dependencies` → Dependencies
 - `relatedFiles` → Scope boundary
+- `unitInventory` → Unit Inventory (routes, test files, public exports)
 
 **Store output as**: `$STEP_6_OUTPUT`
 
@@ -234,17 +239,18 @@ description: "Generate Design Doc"
 prompt: |
   Create Design Doc for the following feature based on existing code.
 
-  Operation Mode: create
+  Operation Mode: reverse-engineer
 
   Feature: $UNIT_NAME (from $STEP_6_OUTPUT)
   Description: $UNIT_DESCRIPTION
   Primary Files: $UNIT_PRIMARY_MODULES
   Public Interfaces: $UNIT_PUBLIC_INTERFACES
   Dependencies: $UNIT_DEPENDENCIES
+  Unit Inventory: $UNIT_INVENTORY (routes, test files, public exports from scope discovery)
 
   Parent PRD: $APPROVED_PRD_PATH
 
-  Document current architecture as-is.
+  Document current architecture as-is. Use Unit Inventory as a completeness baseline — all routes and exports should be accounted for in the Design Doc.
 ```
 
 **Store output as**: `$STEP_7_OUTPUT`
@@ -260,18 +266,19 @@ description: "Generate backend Design Doc"
 prompt: |
   Create a backend Design Doc for the following feature based on existing code.
 
-  Operation Mode: create
+  Operation Mode: reverse-engineer
 
   Feature: $UNIT_NAME (from $STEP_6_OUTPUT)
   Description: $UNIT_DESCRIPTION
   Primary Files: $UNIT_PRIMARY_MODULES
   Public Interfaces: $UNIT_PUBLIC_INTERFACES
   Dependencies: $UNIT_DEPENDENCIES
+  Unit Inventory: $UNIT_INVENTORY
 
   Parent PRD: $APPROVED_PRD_PATH
 
   Focus on: API contracts, data layer, business logic, service architecture.
-  Document current architecture as-is.
+  Document current architecture as-is. Use Unit Inventory as completeness baseline.
 ```
 
 **Store output as**: `$STEP_7a_OUTPUT`
@@ -283,27 +290,28 @@ description: "Generate frontend Design Doc"
 prompt: |
   Create a frontend Design Doc for the following feature based on existing code.
 
-  Operation Mode: create
+  Operation Mode: reverse-engineer
 
   Feature: $UNIT_NAME (from $STEP_6_OUTPUT)
   Description: $UNIT_DESCRIPTION
   Primary Files: $UNIT_PRIMARY_MODULES
   Public Interfaces: $UNIT_PUBLIC_INTERFACES
   Dependencies: $UNIT_DEPENDENCIES
+  Unit Inventory: $UNIT_INVENTORY
 
   Parent PRD: $APPROVED_PRD_PATH
   Backend Design Doc: $STEP_7a_OUTPUT
 
   Reference backend Design Doc for API contracts.
   Focus on: component hierarchy, state management, UI interactions, data fetching.
-  Document current architecture as-is.
+  Document current architecture as-is. Use Unit Inventory as completeness baseline.
 ```
 
 **Store output as**: `$STEP_7b_OUTPUT`
 
 #### Step 8: Code Verification
 
-**Standard mode**: Verify `$STEP_7_OUTPUT` against `$UNIT_PRIMARY_MODULES`.
+**Standard mode**: Verify `$STEP_7_OUTPUT`.
 
 **Fullstack mode**: Verify each Design Doc separately.
 
@@ -316,9 +324,10 @@ prompt: |
 
   doc_type: design-doc
   document_path: $STEP_7_OUTPUT (or $STEP_7a_OUTPUT / $STEP_7b_OUTPUT)
-  code_paths: $UNIT_PRIMARY_MODULES
   verbose: false
 ```
+
+Note: `code_paths` is intentionally NOT provided. The verifier independently discovers code scope from the document.
 
 **Store output as**: `$STEP_8_OUTPUT`
 
