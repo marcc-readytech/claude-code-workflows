@@ -226,7 +226,7 @@ All checks must pass before proceeding:
 - Zero static analysis errors
 - Build succeeds
 - All tests pass
-- Coverage meets project-defined minimum (default: 80%)
+- Coverage meets project-configured threshold
 
 ### Quality Check Pattern (Language-Agnostic)
 ```
