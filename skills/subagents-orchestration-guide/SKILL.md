@@ -11,22 +11,9 @@ description: Guides subagent coordination through implementation workflows. Use 
 
 All investigation, analysis, and implementation work flows through specialized subagents.
 
-### Automatic Responses
-
-| Trigger | Action |
-|---------|--------|
-| New task | Invoke **requirement-analyzer** |
-| Flow in progress | Check scale determination table for next subagent |
-| Phase completion | Delegate to the appropriate subagent |
-| Stop point reached | Wait for user approval |
-
 ### First Action Rule
 
-To accurately analyze user requirements, pass them directly to requirement-analyzer and determine the workflow based on its analysis results.
-
-## Decision Flow When Receiving Tasks
-
-Receive new task → Analyze requirements with requirement-analyzer → Scale assessment → Execute flow based on scale determination table
+When receiving a new task, pass user requirements directly to requirement-analyzer. Determine the workflow based on its scale assessment result.
 
 ### Requirement Change Detection During Flow
 
@@ -56,7 +43,7 @@ The following subagents are available:
 10. **technical-designer**: ADR/Design Doc creation
 11. **work-planner**: Work plan creation from Design Doc and test skeletons
 12. **document-reviewer**: Single document quality and rule compliance check
-13. **code-verifier**: Verify Design Doc claims against existing codebase (used pre-review in design flow)
+13. **code-verifier**: Verify document-code consistency. Pre-implementation: Design Doc claims against existing codebase. Post-implementation: implementation against Design Doc
 14. **design-sync**: Design Doc consistency verification across multiple documents
 15. **acceptance-test-generator**: Generate integration and E2E test skeletons from Design Doc ACs
 
@@ -186,7 +173,7 @@ Construct the prompt from the agent's Input Parameters section and the deliverab
 Subagents respond in JSON format. Key fields for orchestrator decisions:
 - **requirement-analyzer**: scale, confidence, affectedLayers, adrRequired, scopeDependencies, questions
 - **codebase-analyzer**: analysisScope.categoriesDetected, dataModel.detected, focusAreas[], existingElements count, limitations
-- **code-verifier**: (in design flow) consistencyScore, discrepancies[], reverseCoverage (including dataOperationsInCode, testBoundariesSectionPresent)
+- **code-verifier**: status (consistent/mostly_consistent/needs_review/inconsistent), consistencyScore, discrepancies[], reverseCoverage (including dataOperationsInCode, testBoundariesSectionPresent). Pre-implementation: verifies Design Doc claims against existing codebase. Post-implementation: verifies implementation consistency against Design Doc (pass `code_paths` scoped to changed files)
 - **task-executor**: status (escalation_needed/completed), escalation_type (design_compliance_violation/similar_function_found/investigation_target_not_found/out_of_scope_file), testsAdded, requiresTestReview
 - **quality-fixer**: status (approved/blocked). Discriminate blocked type by `reason` field: `"Cannot determine due to unclear specification"` → read `blockingIssues[]` for specification details; `"Execution prerequisites not met"` → read `missingPrerequisites[]` with `resolutionSteps` — present these to the user as actionable next steps
 - **document-reviewer**: approvalReady (true/false)
@@ -308,12 +295,17 @@ graph TD
     QF[quality-fixer: Quality check and fixes] --> COMMIT[Orchestrator: Execute git commit]
     COMMIT --> CHECK{Any remaining tasks?}
     CHECK -->|Yes| LOOP
-    CHECK -->|No| SEC[security-reviewer: Security review]
-    SEC -->|approved/approved_with_notes| REPORT[Completion report]
-    SEC -->|needs_revision| SECFIX[task-executor: Security fixes]
-    SECFIX --> QF2[quality-fixer: Quality check]
-    QF2 --> SEC
-    SEC -->|blocked| USERESC
+    CHECK -->|No| VERIFY[Post-implementation verification]
+    VERIFY --> CV[code-verifier: DD consistency check]
+    VERIFY --> SEC[security-reviewer: Security review]
+    CV --> VRESULT{Verification results}
+    SEC --> VRESULT
+    VRESULT -->|All passed| REPORT[Completion report]
+    VRESULT -->|Any failed| VFIX[task-executor: Verification fixes]
+    VFIX --> QF2[quality-fixer: Quality check]
+    QF2 --> REVERIFY[Re-run failed verifiers only]
+    REVERIFY --> VRESULT
+    VRESULT -->|blocked| USERESC
 
     LOOP --> INTERRUPT{User input?}
     INTERRUPT -->|None| TE
@@ -322,6 +314,15 @@ graph TD
     REQCHECK -->|Change| STOP[Stop autonomous execution]
     STOP --> RA[Re-analyze with requirement-analyzer]
 ```
+
+### Post-Implementation Verification Pass/Fail Criteria
+
+| Verifier | Pass | Fail | Blocked |
+|----------|------|------|---------|
+| code-verifier | `status` is `consistent` or `mostly_consistent` | `status` is `needs_review` or `inconsistent` | — |
+| security-reviewer | `status` is `approved` or `approved_with_notes` | `status` is `needs_revision` | `status` is `blocked` → Escalate to user |
+
+**Re-run rule**: After fix cycle, re-run only verifiers that returned **fail**. Verifiers that passed on the previous run are not re-run.
 
 ### Conditions for Stopping Autonomous Execution
 Stop autonomous execution and escalate to user in the following cases:
@@ -354,15 +355,9 @@ Stop autonomous execution and escalate to user in the following cases:
 3. quality-fixer → Quality check and fixes
 4. git commit → Execute with Bash (on `approved: true`)
 
-### 2-Stage Progress Tracking (TaskCreate/TaskUpdate)
+### Progress Tracking
 
-**Stage 1: Phase Management** (Orchestrator responsibility)
-- Register overall phases using TaskCreate
-- Update status using TaskUpdate as each phase completes
-
-**Stage 2: Task Expansion** (Subagent responsibility)
-- Each subagent registers detailed steps using TaskCreate at execution start
-- Update status using TaskUpdate on each step completion
+Register overall phases using TaskCreate. Update each phase with TaskUpdate as it completes.
 
 ## Main Orchestrator Roles
 
@@ -406,9 +401,7 @@ Stop autonomous execution and escalate to user in the following cases:
 
    **On error**: Escalate to user if files are not generated
 
-3. **Quality Assurance and Commit Execution**: Execute git commit per the 4-step task cycle (see Task Management)
-4. **Autonomous Execution Mode Management**: Start/stop autonomous execution after approval, escalation decisions
-5. **ADR Status Management**: Update ADR status after user decision (Accepted/Rejected)
+3. **ADR Status Management**: Update ADR status after user decision (Accepted/Rejected)
 
 ## Important Constraints
 
@@ -417,23 +410,6 @@ Stop autonomous execution and escalate to user in the following cases:
 - **Approval management**: Document creation → Execute document-reviewer → Get user approval before proceeding
 - **Flow confirmation**: After getting approval, always check next step with work planning flow (large/medium/small scale)
 - **Consistency verification**: Resolve subagent conflicts per Decision precedence (see Delegation Boundary section)
-
-## Required Dialogue Points with Humans
-
-### Basic Principles
-- **Stopping is mandatory**: Always wait for human response at each stop point defined in the Explicit Stop Points table
-- **Confirmation → Agreement cycle**: After document generation, proceed to next step after agreement or fix instructions in update mode
-- **Specific questions**: Make decisions easy with options (A/B/C) or comparison tables
-
-## Action Checklist
-
-When receiving a task, check the following:
-
-- [ ] Confirmed if there is an orchestrator instruction
-- [ ] Determined task type (new feature/fix/research, etc.)
-- [ ] Considered appropriate subagent utilization
-- [ ] Decided next action according to decision flow
-- [ ] Monitored requirement changes and errors during autonomous execution mode
 
 ## References
 

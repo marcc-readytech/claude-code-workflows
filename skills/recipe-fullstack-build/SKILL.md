@@ -120,14 +120,26 @@ Autonomous sub-agents require scope constraints for stable execution. ALWAYS app
 
 Verify task files exist per Pre-execution Checklist, then enter autonomous execution mode. When requirement changes are detected during execution, escalate to the user with the change summary before continuing.
 
-## Security Review (After All Tasks Complete)
+## Post-Implementation Verification (After All Tasks Complete)
 
-After all task cycles finish, invoke security-reviewer before the completion report:
-1. **Agent tool** (subagent_type: "dev-workflows:security-reviewer") → Pass Design Doc path(s) and implementation file list
-2. Check response:
-   - `approved` or `approved_with_notes` → Proceed to completion report (include notes if present)
-   - `needs_revision` → Execute layer-appropriate task-executor with `requiredFixes`, then quality-fixer, then re-invoke security-reviewer
-   - `blocked` → Escalate to user
+After all task cycles finish, run verification agents **in parallel** before the completion report:
+
+1. **Invoke both in parallel** using Agent tool:
+   - code-verifier (subagent_type: "dev-workflows:code-verifier") → invoke **once per Design Doc** (`doc_type: design-doc`, single `document_path`, `code_paths`: implementation file list from `git diff --name-only main...HEAD`)
+   - security-reviewer (subagent_type: "dev-workflows:security-reviewer") → Design Doc path(s), implementation file list
+
+2. **Consolidate results** — check pass/fail for each:
+   - code-verifier: **pass** when `status` is `consistent` or `mostly_consistent`. **fail** when `needs_review` or `inconsistent`. Collect `discrepancies` with status `drift`, `conflict`, or `gap`
+   - security-reviewer: **pass** when `status` is `approved` or `approved_with_notes`. **fail** when `needs_revision`. **blocked** → Escalate to user
+   - Present unified verification report to user
+
+3. **Fix cycle** (when any verifier failed):
+   - Consolidate all actionable findings into a single task file
+   - Execute layer-appropriate task-executor with consolidated fixes → quality-fixer
+   - Re-run only the failed verifiers (by the criteria in step 2)
+   - Repeat until all pass or `blocked` → Escalate to user
+
+4. **All passed** → Proceed to completion report
 
 ## Output Example
 Fullstack implementation phase completed.
