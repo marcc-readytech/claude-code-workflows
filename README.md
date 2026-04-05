@@ -83,7 +83,6 @@ The fullstack recipes create separate Design Docs per layer (backend + frontend)
 # Install metronome (prevents shortcut-taking behavior)
 /plugin install metronome@claude-code-workflows
 
-
 # Install linear-prism (requirements → Linear tasks with quality gates)
 /plugin install linear-prism@claude-code-workflows
 ```
