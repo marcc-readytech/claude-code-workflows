@@ -1,0 +1,32 @@
+{
+  "name": "dev-ext",
+  "version": "0.1.0",
+  "description": "Development lifecycle extensions for dev-workflows — adds PR creation, browser QA, session memory, and CLAUDE.md generation. Install alongside dev-workflows or dev-workflows-frontend.",
+  "author": {
+    "name": "marcc-readytech",
+    "url": "https://github.com/marcc-readytech"
+  },
+  "repository": "https://github.com/marcc-readytech/claude-code-workflows",
+  "license": "MIT",
+  "keywords": [
+    "workflows",
+    "pull-request",
+    "qa",
+    "memory",
+    "context",
+    "development",
+    "browser-testing"
+  ],
+  "agents": [
+    "./agents/claude-md-generator.md",
+    "./agents/context-keeper.md",
+    "./agents/context-scouter.md",
+    "./agents/pr-creator.md",
+    "./agents/pr-reviewer.md",
+    "./agents/web-qa-reviewer.md"
+  ],
+  "skills": [
+    "./skills/recipe-pr",
+    "./skills/recipe-start"
+  ]
+}

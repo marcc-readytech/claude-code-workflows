@@ -20,6 +20,8 @@ This marketplace includes the following plugins:
 - **dev-workflows-frontend** - React/TypeScript specialized workflows
 
 **Optional add-ons** (enhance core plugins):
+- **dev-ext** - PR creation, browser QA, session memory, and CLAUDE.md generation — install alongside `dev-workflows` or `dev-workflows-frontend`
+- **env-guard** - Blocks Claude from reading `.env`, credentials, SSH keys, and secrets via PreToolUse hooks
 - **[claude-code-discover](https://github.com/shinpr/claude-code-discover)** - Turns feature ideas into evidence-backed PRDs
 - **[metronome](https://github.com/shinpr/metronome)** - Detects shortcut-taking behavior and nudges Claude to proceed step by step
 - **[linear-prism](https://github.com/shinpr/linear-prism)** - Turns requirements into structured Linear tasks — validates before decomposing, so downstream design starts clean
@@ -75,6 +77,39 @@ Install both plugins to get the complete toolkit for backend and frontend work.
 ```
 
 The fullstack recipes create separate Design Docs per layer (backend + frontend), verify cross-layer consistency via design-sync, and route tasks to the appropriate executor based on filename patterns. See [Fullstack Workflow](#fullstack-workflow) for details.
+
+### Development Extensions (dev-ext)
+
+Install alongside `dev-workflows` or `dev-workflows-frontend` to add PR creation, browser QA, session memory, and CLAUDE.md generation:
+
+```bash
+/plugin install dev-ext@claude-code-workflows
+```
+
+| Recipe / Agent | What It Does |
+|----------------|-------------|
+| `/recipe-start` | Ticket-to-PR lifecycle — context loading → requirements → design → implementation → PR creation |
+| `/recipe-pr` | Create a PR after implementation — pushes branch, builds body from design doc, opens PR |
+| **context-keeper** | Saves session corrections, gotchas, and project facts to persistent memory files |
+| **context-scouter** | Loads prior session memory at the start of workflows |
+| **pr-creator** | Creates PRs via GitHub MCP or `gh` CLI with structured PR bodies |
+| **pr-reviewer** | Reviews PRs against codebase conventions across 6 quality dimensions |
+| **web-qa-reviewer** | Browser-layer QA via Chrome DevTools — Lighthouse, console errors, network diagnostics |
+| **claude-md-generator** | Generates a `CLAUDE.md` for any project by analyzing stack, commands, and conventions |
+
+> **Requires Chrome DevTools MCP** for `web-qa-reviewer` and `recipe-pr` QA phase. Without it, those steps are skipped gracefully.
+
+### Security (env-guard)
+
+Blocks Claude from accidentally reading or leaking credentials via PreToolUse hooks:
+
+```bash
+/plugin install env-guard@claude-code-workflows
+```
+
+Protects: `.env` files, AWS/Azure/GCP credential files, SSH private keys, `.netrc`, `.pgpass`, `terraform.tfvars`, shell history, and dangerous bash patterns (`env`, `printenv`, `cat .env`, secret `echo` patterns).
+
+Safe example files (`.env.example`, `.env.sample`, `.env.template`) are always allowed.
 
 ### External Plugins
 
@@ -477,6 +512,19 @@ claude-code-workflows/
 │
 ├── skills-only/                # dev-skills plugin (knowledge skills only, no recipes/agents)
 │   ├── skills/                 # Symlinks to shared knowledge skills (9 of 11 — workflow-specific skills excluded)
+│   └── .claude-plugin/
+│       └── plugin.json
+│
+├── plugin-dev-ext/             # dev-ext plugin (lifecycle extensions — PR, QA, memory)
+│   ├── agents/                 # Symlinks to shared agents
+│   ├── skills/                 # Symlinks to recipe-pr and recipe-start
+│   └── .claude-plugin/
+│       └── plugin.json
+│
+├── plugin-env-guard/           # env-guard plugin (credential protection hooks)
+│   ├── hooks/
+│   │   ├── env_guard_hook.py   # PreToolUse security hook
+│   │   └── hooks.json
 │   └── .claude-plugin/
 │       └── plugin.json
 │

@@ -1,0 +1,20 @@
+{
+  "name": "env-guard",
+  "version": "0.1.0",
+  "description": "Prevents Claude Code from reading or leaking sensitive files — .env, credentials, SSH keys, and secrets — via enforced PreToolUse hooks. Blocks dangerous bash patterns that could expose secrets through shell commands.",
+  "author": {
+    "name": "marcc-readytech",
+    "url": "https://github.com/marcc-readytech"
+  },
+  "repository": "https://github.com/marcc-readytech/claude-code-workflows",
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "credentials",
+    "env",
+    "secrets",
+    "hooks",
+    "safety"
+  ],
+  "hooks": "./hooks/hooks.json"
+}

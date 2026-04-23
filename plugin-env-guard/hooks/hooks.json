@@ -1,0 +1,16 @@
+{
+  "description": "Blocks Claude Code from reading, writing, or shell-leaking sensitive credential files — .env, AWS/Azure/GCP keys, SSH keys, and shell history",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Write|Edit|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/env_guard_hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}

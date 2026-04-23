@@ -52,6 +52,18 @@
       "description": "Turns requirements into structured Linear tasks — validates before decomposing, so downstream design starts clean",
       "category": "workflow-orchestration",
       "homepage": "https://github.com/shinpr/linear-prism"
+    },
+    {
+      "name": "dev-ext",
+      "source": "./plugin-dev-ext",
+      "description": "Development lifecycle extensions — PR creation, browser QA, session memory (context-keeper/scouter), and CLAUDE.md generation. Install alongside dev-workflows or dev-workflows-frontend.",
+      "category": "workflow-orchestration"
+    },
+    {
+      "name": "env-guard",
+      "source": "./plugin-env-guard",
+      "description": "Prevents Claude Code from reading or leaking sensitive files — .env, credentials, SSH keys, and secrets — via enforced PreToolUse hooks",
+      "category": "security"
     }
   ]
 }
