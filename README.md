@@ -7,13 +7,11 @@
 
 **End-to-end development workflows for Claude Code** - Specialized agents handle requirements, design, implementation, and quality checks so you get reviewable code, not just generated code.
 
-A personal fork of [@shinpr](https://github.com/shinpr)'s [claude-code-workflows](https://github.com/shinpr/claude-code-workflows), extended with a QA plugin, env-guard, and Windows compatibility.
+A personal fork of [@shinpr](https://github.com/shinpr)'s [claude-code-workflows](https://github.com/shinpr/claude-code-workflows), extended with PR workflows, browser QA, session memory, and credential protection.
 
 ---
 
 ## ⚡ Quick Start
-
-> **Windows:** This repo uses symlinks. Git doesn't create them by default. Use WSL, or clone with `git clone -c core.symlinks=true` in an admin PowerShell, then install plugins from the local clone. Admin is only needed for initial setup.
 
 This marketplace includes the following plugins:
 
@@ -472,7 +470,7 @@ claude-code-workflows/
 ├── .claude-plugin/
 │   └── marketplace.json        # Manages both plugins
 │
-├── agents/                     # Shared agents (symlinked by both plugins)
+├── agents/                     # Source-of-truth agent definitions (copied into each plugin)
 │   ├── codebase-analyzer.md     # Pre-design codebase analysis
 │   ├── code-reviewer.md
 │   ├── code-verifier.md        # Design verification & reverse engineering
@@ -484,7 +482,7 @@ claude-code-workflows/
 │   ├── technical-designer.md
 │   └── ...
 │
-├── skills/                     # Shared skills (knowledge + recipe workflows)
+├── skills/                     # Source-of-truth skills (knowledge + recipe workflows)
 │   ├── recipe-implement/       # Workflow entry points (recipe-* prefix)
 │   ├── recipe-design/
 │   ├── recipe-diagnose/
@@ -503,25 +501,25 @@ claude-code-workflows/
 │   └── ... (29 skills total: 18 recipes + 11 knowledge)
 │
 ├── backend/                    # dev-workflows plugin
-│   ├── agents/                 # Symlinks to shared agents
-│   ├── skills/                 # Symlinks to shared skills
+│   ├── agents/                 # Copies of shared agents
+│   ├── skills/                 # Copies of shared skills
 │   └── .claude-plugin/
 │       └── plugin.json
 │
 ├── frontend/                   # dev-workflows-frontend plugin
-│   ├── agents/                 # Symlinks to shared agents
-│   ├── skills/                 # Symlinks to shared skills
+│   ├── agents/                 # Copies of shared agents
+│   ├── skills/                 # Copies of shared skills
 │   └── .claude-plugin/
 │       └── plugin.json
 │
 ├── skills-only/                # dev-skills plugin (knowledge skills only, no recipes/agents)
-│   ├── skills/                 # Symlinks to shared knowledge skills (9 of 11 — workflow-specific skills excluded)
+│   ├── skills/                 # Copies of shared knowledge skills (9 of 11 — workflow-specific skills excluded)
 │   └── .claude-plugin/
 │       └── plugin.json
 │
 ├── plugin-dev-ext/             # dev-ext plugin (lifecycle extensions — PR, QA, memory)
-│   ├── agents/                 # Symlinks to shared agents
-│   ├── skills/                 # Symlinks to recipe-pr and recipe-start
+│   ├── agents/                 # Copies of shared agents
+│   ├── skills/                 # Copies of recipe-pr and recipe-start
 │   └── .claude-plugin/
 │       └── plugin.json
 │
