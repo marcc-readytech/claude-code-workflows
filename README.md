@@ -1,11 +1,13 @@
 # Claude Code Workflows 🚀
 
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Plugin-purple)](https://claude.ai/code)
-[![GitHub Stars](https://img.shields.io/github/stars/shinpr/claude-code-workflows?style=social)](https://github.com/shinpr/claude-code-workflows)
+[![GitHub Stars](https://img.shields.io/github/stars/marcc-readytech/claude-code-workflows?style=social)](https://github.com/marcc-readytech/claude-code-workflows)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/shinpr/claude-code-workflows/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/marcc-readytech/claude-code-workflows/pulls)
 
 **End-to-end development workflows for Claude Code** - Specialized agents handle requirements, design, implementation, and quality checks so you get reviewable code, not just generated code.
+
+A personal fork of [@shinpr](https://github.com/shinpr)'s [claude-code-workflows](https://github.com/shinpr/claude-code-workflows), extended with a QA plugin, env-guard, and Windows compatibility.
 
 ---
 
@@ -38,7 +40,7 @@ These plugins provide end-to-end workflows for AI-assisted development. Choose w
 claude
 
 # 2. Install the marketplace
-/plugin marketplace add shinpr/claude-code-workflows
+/plugin marketplace add marcc-readytech/claude-code-workflows
 
 # 3. Install backend plugin
 /plugin install dev-workflows@claude-code-workflows
@@ -489,14 +491,16 @@ claude-code-workflows/
 │   ├── recipe-reverse-engineer/
 │   ├── recipe-plan/
 │   ├── recipe-build/
-│   ├── ... (16 recipe skills total)
+│   ├── recipe-pr/              # dev-ext: PR creation workflow
+│   ├── recipe-start/           # dev-ext: Ticket-to-PR lifecycle
+│   ├── ... (18 recipe skills total)
 │
 │   ├── ai-development-guide/   # Knowledge skills (auto-loaded by agents)
 │   ├── coding-principles/
 │   ├── testing-principles/
 │   ├── implementation-approach/
 │   ├── typescript-rules/       # Frontend-specific
-│   └── ... (27 skills total: 16 recipes + 11 knowledge)
+│   └── ... (29 skills total: 18 recipes + 11 knowledge)
 │
 ├── backend/                    # dev-workflows plugin
 │   ├── agents/                 # Symlinks to shared agents
@@ -583,4 +587,4 @@ See [LICENSE](LICENSE) for full details.
 
 ---
 
-Built and maintained by [@shinpr](https://github.com/shinpr).
+Built and maintained by [@marcc-readytech](https://github.com/marcc-readytech). Originally forked from [@shinpr](https://github.com/shinpr)'s [claude-code-workflows](https://github.com/shinpr/claude-code-workflows).

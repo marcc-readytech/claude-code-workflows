@@ -3,11 +3,11 @@
   "version": "0.16.14",
   "description": "Skills + Subagents for React/TypeScript - Use skills for coding guidance, or run recipe workflows for full orchestrated agentic coding with specialized agents",
   "author": {
-    "name": "Shinsuke Kagawa",
-    "url": "https://github.com/shinpr"
+    "name": "marcc-readytech",
+    "url": "https://github.com/marcc-readytech"
   },
-  "homepage": "https://github.com/shinpr/dev-workflows",
-  "repository": "https://github.com/shinpr/dev-workflows.git",
+  "homepage": "https://github.com/marcc-readytech/claude-code-workflows",
+  "repository": "https://github.com/marcc-readytech/claude-code-workflows.git",
   "license": "MIT",
   "keywords": [
     "react",
